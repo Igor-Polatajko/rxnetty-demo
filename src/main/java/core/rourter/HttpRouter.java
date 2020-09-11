@@ -1,4 +1,4 @@
-package core;
+package core.rourter;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
@@ -10,6 +10,7 @@ import rx.Observable;
 import java.util.HashMap;
 import java.util.Map;
 
+// ToDo add support for path variables
 public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
 
     private static final HttpRouteHandler DEFAULT_HANDLER =
@@ -20,7 +21,7 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
     @Override
     public Observable<Void> handle(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
 
-        HttpMapping httpMapping = new HttpMapping(request.getDecodedPath(), HttpMethod.GET);
+        HttpMapping httpMapping = new HttpMapping(request.getDecodedPath(), request.getHttpMethod());
         return routesMap
                 .getOrDefault(httpMapping, DEFAULT_HANDLER)
                 .handle(request, response);
