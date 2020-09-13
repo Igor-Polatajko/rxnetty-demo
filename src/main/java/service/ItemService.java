@@ -1,8 +1,8 @@
 package service;
 
 import com.google.inject.Inject;
-import core.mapping.GenericDeserializer;
-import core.mapping.GenericSerializer;
+import core.serde.GenericDeserializer;
+import core.serde.GenericSerializer;
 import dao.ItemDao;
 import domain.Item;
 import io.netty.buffer.ByteBuf;
@@ -44,7 +44,7 @@ public class ItemService {
                 .addHeader("Content-Type", "application/json")
                 .writeString(
                         serializer.serialize(
-                                itemDao.findAll()
+                                itemDao.findAll().toList()
                         ));
     }
 
@@ -76,11 +76,12 @@ public class ItemService {
 
     public Observable<Void> delete(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
 
-        itemDao.delete(fetchLongIdFromQueryParams(request));
+        itemDao.delete(fetchLongIdFromQueryParams(request)).subscribe();
 
         return response
                 .setStatus(HttpResponseStatus.NO_CONTENT)
-                .addHeader("Content-Type", "application/json");
+                .addHeader("Content-Type", "application/json")
+                .writeString(Observable.empty());
     }
 
     private Long fetchLongIdFromQueryParams(HttpServerRequest<ByteBuf> request) {

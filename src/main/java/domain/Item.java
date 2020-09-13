@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Column;
 import java.time.LocalDateTime;
 
 @Data
@@ -13,13 +14,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Item {
 
+    @Column(name = "id")
     private Long id;
 
+    @Column(name = "title")
     private String title;
 
+    @Column(name = "data")
     private String data;
 
-    private LocalDateTime updatedDate;
-
+    @Column(name = "created_date")
     private LocalDateTime createdDate;
+
+    @Column(name = "updated_date")
+    private LocalDateTime updatedDate;
 }
