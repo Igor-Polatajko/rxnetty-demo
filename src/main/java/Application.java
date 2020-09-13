@@ -11,6 +11,7 @@ public class Application {
         // setup basic config for sfl4j
         BasicConfigurator.configure();
 
+        // Run HttpHandler
         Injector injector = Guice.createInjector(new BasicModule());
         injector.getInstance(HttpHandler.class).run();
     }
