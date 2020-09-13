@@ -10,11 +10,12 @@
 
     <properties>
         <flyway.version>6.5.5</flyway.version>
-        <flyway.url>jdbc:mysql://localhost:3306/items?serverTimezone=UTC</flyway.url>
-        <flyway.user>root</flyway.user>
-        <flyway.password>root</flyway.password>
-        <flyway.schemas>items</flyway.schemas>
-        <flyway.locations>filesystem:db/migration</flyway.locations>
+        <jooq.version>3.13.4</jooq.version>
+        <db.url>jdbc:mysql://localhost:3306/items?serverTimezone=UTC</db.url>
+        <db.user>root</db.user>
+        <db.password>root</db.password>
+        <db.schema>items</db.schema>
+        <db.driver>com.mysql.jdbc.Driver</db.driver>
     </properties>
 
     <build>
@@ -31,6 +32,46 @@
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>${flyway.version}</version>
+                <configuration>
+                    <url>${db.url}</url>
+                    <user>${db.user}</user>
+                    <password>${db.password}</password>
+                    <schemas>${db.schema}</schemas>
+                    <locations>filesystem:db/migration</locations>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <version>${jooq.version}</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jdbc>
+                        <driver>${db.driver}</driver>
+                        <url>${db.url}</url>
+                        <user>${db.user}</user>
+                        <password>${db.password}</password>
+                    </jdbc>
+                    <generator>
+                        <database>
+                            <name>org.jooq.meta.mysql.MySQLDatabase</name>
+                            <includes>.*</includes>
+                            <excludes></excludes>
+                            <inputSchema>${db.schema}</inputSchema>
+                        </database>
+                        <target>
+                            <packageName>org.jooq.sources</packageName>
+                            <directory>target/generated-sources/jooq</directory>
+                        </target>
+                    </generator>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -79,7 +120,7 @@
         <dependency>
             <groupId>org.jooq</groupId>
             <artifactId>jooq</artifactId>
-            <version>3.13.4</version>
+            <version>${jooq.version}</version>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>

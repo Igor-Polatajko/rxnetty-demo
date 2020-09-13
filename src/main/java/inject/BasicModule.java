@@ -31,8 +31,8 @@ public class BasicModule extends AbstractModule {
         try {
             ComboPooledDataSource dataSource = new ComboPooledDataSource();
 
-            dataSource.setDriverClass("com.mysql.jdbc.Driver ");
-            dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/items");
+            dataSource.setDriverClass("com.mysql.jdbc.Driver");
+            dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/items?serverTimezone=UTC");
             dataSource.setUser("root");
             dataSource.setPassword("root");
             dataSource.setMinPoolSize(5);
