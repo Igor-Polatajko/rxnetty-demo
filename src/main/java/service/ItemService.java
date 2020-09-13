@@ -1,5 +1,6 @@
 package service;
 
+import com.google.inject.Inject;
 import core.mapping.GenericDeserializer;
 import core.mapping.GenericSerializer;
 import dao.ItemDao;
@@ -12,11 +13,18 @@ import rx.Observable;
 
 public class ItemService {
 
-    private ItemDao itemDao = new ItemDao();
+    private ItemDao itemDao;
 
-    private GenericSerializer serializer = new GenericSerializer();
+    private GenericSerializer serializer;
 
-    private GenericDeserializer deserializer = new GenericDeserializer();
+    private GenericDeserializer deserializer;
+
+    @Inject
+    public ItemService(ItemDao itemDao, GenericSerializer serializer, GenericDeserializer deserializer) {
+        this.itemDao = itemDao;
+        this.serializer = serializer;
+        this.deserializer = deserializer;
+    }
 
     public Observable<Void> findById(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
 

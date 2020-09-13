@@ -1,14 +1,21 @@
-import service.ItemService;
+package handler;
+
+import com.google.inject.Inject;
 import core.rourter.HttpRouter;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
 import io.reactivex.netty.protocol.http.server.HttpServer;
 import rx.Observable;
+import service.ItemService;
 
-// ToDo use Guice for DI
 public class HttpHandler {
 
-    private ItemService itemService = new ItemService();
+    private ItemService itemService;
+
+    @Inject
+    public HttpHandler(ItemService itemService) {
+        this.itemService = itemService;
+    }
 
     public void run() {
 
