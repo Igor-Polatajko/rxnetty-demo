@@ -2,9 +2,11 @@ package core.rourter;
 
 import core.rourter.handler.ExceptionHandler;
 import core.rourter.handler.HttpRouteHandler;
+import core.rourter.request.RequestContext;
+import core.rourter.request.RequestContextImpl;
+import core.rourter.response.ContentType;
 import core.rourter.response.Response;
 import core.rourter.response.ResponseBody;
-import core.rourter.response.ResponseType;
 import core.serde.Serializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
@@ -12,25 +14,26 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import io.reactivex.netty.protocol.http.server.RequestHandler;
+import lombok.extern.slf4j.Slf4j;
 import rx.Observable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-// ToDo add support for path variables
+@Slf4j
 public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
 
     private static final HttpRouteHandler NOT_FOUND_MAPPING_HANDLER =
-            request -> Response.builder()
-                    .body(Observable.just("Route not found"))
-                    .responseType(ResponseType.JSON)
+            requestContext -> Response.builder()
+                    .body("Route not found")
+                    .contentType(ContentType.JSON)
                     .status(HttpResponseStatus.NOT_FOUND)
                     .build();
 
     private static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER =
             throwable -> Response.builder()
-                    .body(Observable.just("Internal server error!"))
-                    .responseType(ResponseType.JSON)
+                    .body("Internal server error!")
+                    .contentType(ContentType.JSON)
                     .status(HttpResponseStatus.INTERNAL_SERVER_ERROR)
                     .build();
 
@@ -39,17 +42,18 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
     private Map<Class<? extends Throwable>, ExceptionHandler> errorResponses = new HashMap<>();
 
     @Override
-    @SuppressWarnings("unchecked")
     public Observable<Void> handle(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
 
         HttpMapping httpMapping = new HttpMapping(request.getDecodedPath(), request.getHttpMethod());
 
-        Response handlingResult = handleRequest(request, httpMapping);
+        Response handlingResult = handleRequest(request, response, httpMapping);
 
         Observable<ResponseBody> responseBody = getResponseBody(handlingResult);
 
         return responseBody.flatMap(body -> {
             if (body.isError()) {
+
+                log.error("Error occurred!", body.getError());
 
                 Response errorResponse = errorResponses
                         .getOrDefault(body.getError().getClass(), DEFAULT_EXCEPTION_HANDLER)
@@ -65,12 +69,19 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
         });
     }
 
-    private Response handleRequest(HttpServerRequest<ByteBuf> request, HttpMapping httpMapping) {
+    private Response handleRequest(HttpServerRequest<ByteBuf> httpServerRequest,
+                                   HttpServerResponse<ByteBuf> httpServerResponse, HttpMapping httpMapping) {
+
         try {
+
+            RequestContext requestContext = new RequestContextImpl(httpServerRequest, httpServerResponse);
+
             return routesMap
                     .getOrDefault(httpMapping, NOT_FOUND_MAPPING_HANDLER)
-                    .handle(request); // ToDo request have to be deserialized here as well
+                    .handle(requestContext);
         } catch (Throwable throwable) {
+            log.error("Error occurred!", throwable);
+
             return errorResponses
                     .getOrDefault(throwable.getClass(), DEFAULT_EXCEPTION_HANDLER)
                     .handle(throwable);
@@ -80,7 +91,7 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
     private void setResponseStatusAndHeaders(HttpServerResponse<ByteBuf> httpServerResponse, Response response) {
         httpServerResponse.setStatus(response.getStatus());
         response.getHeaders().forEach(httpServerResponse::addHeader);
-        httpServerResponse.addHeader("Content-Type", response.getResponseType().getContentTypeHeader());
+        httpServerResponse.addHeader("Content-Type", response.getContentType().getContentTypeHeader());
     }
 
     @SuppressWarnings("unchecked")
@@ -88,7 +99,7 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
         Object resultBody = handlingResult.getBody();
         Observable body = resultBody instanceof Observable ? (Observable) resultBody : Observable.just(resultBody);
 
-        Serializer serializer = handlingResult.getResponseType().getSerializer();
+        Serializer serializer = handlingResult.getContentType().getSerializer();
         return serializer.serialize(body)
                 .single()
                 .map(content -> ResponseBody.builder()

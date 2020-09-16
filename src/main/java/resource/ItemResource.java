@@ -1,13 +1,11 @@
 package resource;
 
 import com.google.inject.Inject;
+import core.rourter.request.RequestContext;
 import core.rourter.response.Response;
-import core.serde.GenericDeserializer;
 import dao.ItemDao;
 import domain.Item;
-import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import rx.Observable;
 
 import java.util.List;
@@ -16,17 +14,14 @@ public class ItemResource {
 
     private ItemDao itemDao;
 
-    private GenericDeserializer deserializer;
-
     @Inject
-    public ItemResource(ItemDao itemDao, GenericDeserializer deserializer) {
+    public ItemResource(ItemDao itemDao) {
         this.itemDao = itemDao;
-        this.deserializer = deserializer;
     }
 
-    public Response findById(HttpServerRequest<ByteBuf> request) {
+    public Response findById(RequestContext requestContext) {
 
-        Observable<Item> item = itemDao.findById(fetchLongIdFromQueryParams(request));
+        Observable<Item> item = itemDao.findById((Long) requestContext.getQueryParam("id", Long.class).get());
 
         return Response.builder()
                 .body(item)
@@ -34,7 +29,7 @@ public class ItemResource {
                 .build();
     }
 
-    public Response findAll(HttpServerRequest<ByteBuf> request) {
+    public Response findAll(RequestContext requestContext) {
 
         Observable<List<Item>> items = itemDao.findAll().toList();
 
@@ -44,11 +39,9 @@ public class ItemResource {
                 .build();
     }
 
-    public Response create(HttpServerRequest<ByteBuf> request) {
+    public Response create(RequestContext requestContext) {
 
-        Observable<Item> item = deserializer.deserialize(request.getContent(), Item.class);
-
-        Observable<Item> createdItem = itemDao.create(item);
+        Observable<Item> createdItem = itemDao.create(requestContext.deserializeBody(Item.class));
 
         return Response.builder()
                 .body(createdItem)
@@ -56,11 +49,12 @@ public class ItemResource {
                 .build();
     }
 
-    public Response update(HttpServerRequest<ByteBuf> request) {
+    public Response update(RequestContext requestContext) {
 
-        Observable<Item> item = deserializer.deserialize(request.getContent(), Item.class);
-
-        Observable<Item> updatedItem = itemDao.update(fetchLongIdFromQueryParams(request), item);
+        Observable<Item> updatedItem = itemDao.update(
+                (Long) requestContext.getQueryParam("id", Long.class).get(),
+                requestContext.deserializeBody(Item.class)
+        );
 
         return Response.builder()
                 .body(updatedItem)
@@ -68,19 +62,14 @@ public class ItemResource {
                 .build();
     }
 
-    public Response delete(HttpServerRequest<ByteBuf> request) {
+    public Response delete(RequestContext requestContext) {
 
-        itemDao.delete(fetchLongIdFromQueryParams(request)).subscribe();
+        itemDao.delete((Long) requestContext.getQueryParam("id", Long.class).get()).subscribe();
 
         return Response.builder()
                 .body(Observable.empty())
                 .status(HttpResponseStatus.NO_CONTENT)
                 .build();
-    }
-
-    private Long fetchLongIdFromQueryParams(HttpServerRequest<ByteBuf> request) {
-        String idStringValue = request.getQueryParameters().get("id").get(0);
-        return Long.valueOf(idStringValue);
     }
 
 }

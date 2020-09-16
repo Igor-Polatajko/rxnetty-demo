@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import rx.Observable;
 
-public class GenericSerializer implements Serializer {
+public class JsonSerializer implements Serializer {
 
     private ObjectMapper objectMapper = ObjectMapperProvider.getObjectMapper();
 

@@ -22,6 +22,6 @@ public class Response {
     private HttpResponseStatus status = HttpResponseStatus.OK;
 
     @Builder.Default
-    private ResponseType responseType = ResponseType.JSON;
+    private ContentType contentType = ContentType.JSON;
 
 }

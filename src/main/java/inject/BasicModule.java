@@ -2,13 +2,14 @@ package inject;
 
 import com.google.inject.AbstractModule;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-import core.serde.GenericDeserializer;
+import core.serde.JsonDeserializer;
 import dao.ItemDao;
 import handler.HttpHandler;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import resource.ItemResource;
+import resource.SimpleTextResource;
 
 import javax.sql.DataSource;
 import java.beans.PropertyVetoException;
@@ -20,7 +21,7 @@ public class BasicModule extends AbstractModule {
         bind(HttpHandler.class);
         bind(ItemResource.class);
         bind(ItemDao.class);
-        bind(GenericDeserializer.class);
+        bind(SimpleTextResource.class);
 
         bind(DSLContext.class).toInstance(createDSLContext());
     }

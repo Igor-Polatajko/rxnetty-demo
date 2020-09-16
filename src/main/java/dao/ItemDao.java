@@ -49,7 +49,7 @@ public class ItemDao {
 
 
     public Observable<Item> update(Long id, Observable<Item> item) {
-        return item.map(it -> {
+        return item.flatMap(it -> {
 
             LocalDateTime updatedDate = LocalDateTime.now();
 
@@ -60,10 +60,7 @@ public class ItemDao {
                     .where(ITEMS_.ID.eq(id))
                     .execute();
 
-            return it.toBuilder()
-                    .id(id)
-                    .updatedDate(updatedDate)
-                    .build();
+            return findById(id);
         });
     }
 
