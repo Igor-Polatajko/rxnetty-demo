@@ -1,8 +1,8 @@
 package handler;
 
 import com.google.inject.Inject;
-import core.rourter.HttpRouter;
-import core.rourter.response.Response;
+import core.router.HttpRouter;
+import core.router.response.Response;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;

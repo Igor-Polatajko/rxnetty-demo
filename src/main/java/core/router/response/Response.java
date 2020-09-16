@@ -1,5 +1,6 @@
-package core.rourter.response;
+package core.router.response;
 
+import core.router.ContentType;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import lombok.Builder;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package core.rourter.response;
+package core.router.response;
 
 import lombok.Builder;
 import lombok.Data;

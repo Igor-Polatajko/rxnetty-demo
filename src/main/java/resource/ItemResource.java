@@ -1,8 +1,8 @@
 package resource;
 
 import com.google.inject.Inject;
-import core.rourter.request.RequestContext;
-import core.rourter.response.Response;
+import core.router.request.RequestContext;
+import core.router.response.Response;
 import dao.ItemDao;
 import domain.Item;
 import io.netty.handler.codec.http.HttpResponseStatus;

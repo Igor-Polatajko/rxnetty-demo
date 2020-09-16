@@ -2,7 +2,6 @@ package inject;
 
 import com.google.inject.AbstractModule;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-import core.serde.JsonDeserializer;
 import dao.ItemDao;
 import handler.HttpHandler;
 import org.jooq.DSLContext;
@@ -13,6 +12,9 @@ import resource.SimpleTextResource;
 
 import javax.sql.DataSource;
 import java.beans.PropertyVetoException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class BasicModule extends AbstractModule {
 
@@ -33,18 +35,32 @@ public class BasicModule extends AbstractModule {
     private DataSource createDataSource() {
 
         try {
+
+            Properties properties = loadProperties();
+
             ComboPooledDataSource dataSource = new ComboPooledDataSource();
 
-            dataSource.setDriverClass("com.mysql.cj.jdbc.Driver");
-            dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/items?serverTimezone=UTC");
-            dataSource.setUser("root");
-            dataSource.setPassword("root");
+            dataSource.setDriverClass(properties.getProperty("db.driver"));
+            dataSource.setJdbcUrl(properties.getProperty("db.url"));
+            dataSource.setUser(properties.getProperty("db.user"));
+            dataSource.setPassword(properties.getProperty("db.password"));
             dataSource.setMinPoolSize(5);
             dataSource.setMaxPoolSize(20);
             dataSource.setAcquireIncrement(5);
 
             return dataSource;
         } catch (PropertyVetoException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Properties loadProperties() {
+        try {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("project.properties");
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            return properties;
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

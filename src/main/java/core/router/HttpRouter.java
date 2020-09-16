@@ -1,12 +1,11 @@
-package core.rourter;
+package core.router;
 
-import core.rourter.handler.ExceptionHandler;
-import core.rourter.handler.HttpRouteHandler;
-import core.rourter.request.RequestContext;
-import core.rourter.request.RequestContextImpl;
-import core.rourter.response.ContentType;
-import core.rourter.response.Response;
-import core.rourter.response.ResponseBody;
+import core.router.handler.ExceptionHandler;
+import core.router.handler.HttpRouteHandler;
+import core.router.request.RequestContext;
+import core.router.request.RequestContextImpl;
+import core.router.response.Response;
+import core.router.response.ResponseBody;
 import core.serde.Serializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
@@ -32,7 +31,7 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
 
     private static final ExceptionHandler DEFAULT_EXCEPTION_HANDLER =
             throwable -> Response.builder()
-                    .body("Internal server error!")
+                    .body(throwable.getMessage())
                     .contentType(ContentType.JSON)
                     .status(HttpResponseStatus.INTERNAL_SERVER_ERROR)
                     .build();

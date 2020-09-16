@@ -1,7 +1,7 @@
-package core.rourter.handler;
+package core.router.handler;
 
-import core.rourter.request.RequestContext;
-import core.rourter.response.Response;
+import core.router.request.RequestContext;
+import core.router.response.Response;
 
 @FunctionalInterface
 public interface HttpRouteHandler {

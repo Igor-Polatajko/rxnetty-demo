@@ -1,7 +1,7 @@
 package resource;
 
-import core.rourter.request.RequestContext;
-import core.rourter.response.Response;
+import core.router.request.RequestContext;
+import core.router.response.Response;
 import rx.Observable;
 
 public class SimpleTextResource {

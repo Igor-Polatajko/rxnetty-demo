@@ -1,4 +1,4 @@
-package core.rourter.response;
+package core.router;
 
 import core.serde.Deserializer;
 import core.serde.JsonDeserializer;
