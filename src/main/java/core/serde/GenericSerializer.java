@@ -2,17 +2,13 @@ package core.serde;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import rx.Observable;
 
-public class GenericSerializer {
+public class GenericSerializer implements Serializer {
 
-    private ObjectMapper objectMapper;
-
-    @Inject
-    public GenericSerializer(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+    private ObjectMapper objectMapper = ObjectMapperProvider.getObjectMapper();
 
     public <T> Observable<String> serialize(Observable<T> object) {
         return object

@@ -1,18 +1,14 @@
 package inject;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.inject.AbstractModule;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import core.serde.GenericDeserializer;
-import core.serde.GenericSerializer;
 import dao.ItemDao;
 import handler.HttpHandler;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
-import service.ItemService;
+import resource.ItemResource;
 
 import javax.sql.DataSource;
 import java.beans.PropertyVetoException;
@@ -22,11 +18,9 @@ public class BasicModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(HttpHandler.class);
-        bind(ItemService.class);
+        bind(ItemResource.class);
         bind(ItemDao.class);
-        bind(GenericSerializer.class);
         bind(GenericDeserializer.class);
-        bind(ObjectMapper.class).toInstance(createObjectMapper());
 
         bind(DSLContext.class).toInstance(createDSLContext());
     }
@@ -52,13 +46,6 @@ public class BasicModule extends AbstractModule {
         } catch (PropertyVetoException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private ObjectMapper createObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return objectMapper;
     }
 
 }

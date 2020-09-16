@@ -10,12 +10,7 @@ import java.nio.charset.StandardCharsets;
 
 public class GenericDeserializer {
 
-    private ObjectMapper objectMapper;
-
-    @Inject
-    public GenericDeserializer(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+    private ObjectMapper objectMapper = ObjectMapperProvider.getObjectMapper();
 
     public <T> Observable<T> deserialize(Observable<ByteBuf> body, Class<T> clazz) {
         return body

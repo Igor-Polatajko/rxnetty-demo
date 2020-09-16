@@ -5,30 +5,25 @@ import core.rourter.HttpRouter;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
 import io.reactivex.netty.protocol.http.server.HttpServer;
-import rx.Observable;
-import service.ItemService;
+import resource.ItemResource;
 
 public class HttpHandler {
 
-    private ItemService itemService;
+    private ItemResource itemResource;
 
     @Inject
-    public HttpHandler(ItemService itemService) {
-        this.itemService = itemService;
+    public HttpHandler(ItemResource itemResource) {
+        this.itemResource = itemResource;
     }
 
     public void run() {
 
         HttpRouter router = new HttpRouter()
-                .addRoute("/hello",
-                        HttpMethod.GET,
-                        (request, response) -> response.writeString(Observable.just("Hello from registered route!"))
-                )
-                .addRoute("/items", HttpMethod.GET, itemService::findAll)
-                .addRoute("/item", HttpMethod.GET, itemService::findById)
-                .addRoute("/item", HttpMethod.POST, itemService::create)
-                .addRoute("/item", HttpMethod.PUT, itemService::update)
-                .addRoute("/item", HttpMethod.DELETE, itemService::delete);
+                .addRoute("/items", HttpMethod.GET, itemResource::findAll)
+                .addRoute("/item", HttpMethod.GET, itemResource::findById)
+                .addRoute("/item", HttpMethod.POST, itemResource::create)
+                .addRoute("/item", HttpMethod.PUT, itemResource::update)
+                .addRoute("/item", HttpMethod.DELETE, itemResource::delete);
 
         HttpServer<ByteBuf, ByteBuf> server = HttpServer.newServer(8080)
                 .start(router);
