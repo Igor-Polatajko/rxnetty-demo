@@ -14,7 +14,7 @@ import java.util.Map;
 public class Response {
 
     @Builder.Default
-    private Object body = Observable.empty();
+    private Object body = Observable.just("");
 
     @Builder.Default
     private Map<String, String> headers = new HashMap<>();

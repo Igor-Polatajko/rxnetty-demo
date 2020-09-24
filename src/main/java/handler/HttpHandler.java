@@ -3,6 +3,7 @@ package handler;
 import com.google.inject.Inject;
 import core.router.HttpRouter;
 import core.router.response.Response;
+import exception.NotFoundException;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -32,8 +33,12 @@ public class HttpHandler {
                 .addRoute("/items/{id}", HttpMethod.DELETE, itemResource::delete)
                 .addRoute("/upper", HttpMethod.GET, simpleTextResource::toUpperCase)
                 .addExceptionHandler(RuntimeException.class, ex -> Response.builder()
-                        .status(HttpResponseStatus.SERVICE_UNAVAILABLE)
+                        .status(HttpResponseStatus.INTERNAL_SERVER_ERROR)
                         .body("Runtime exception occurred!")
+                        .build())
+                .addExceptionHandler(NotFoundException.class, ex -> Response.builder()
+                        .status(HttpResponseStatus.BAD_REQUEST)
+                        .body(ex.getMessage())
                         .build());
 
         HttpServer<ByteBuf, ByteBuf> server = HttpServer.newServer(8080)

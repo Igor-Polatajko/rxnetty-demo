@@ -5,10 +5,13 @@ import core.router.request.RequestContext;
 import core.router.response.Response;
 import dao.ItemDao;
 import domain.Item;
+import exception.NotFoundException;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import rx.Observable;
 
 import java.util.List;
+
+import static java.util.Objects.isNull;
 
 public class ItemResource {
 
@@ -21,10 +24,8 @@ public class ItemResource {
 
     public Response findById(RequestContext requestContext) {
 
-        Observable<Item> item = itemDao.findById(Long.valueOf(requestContext.getPathParam("id")));
-
         return Response.builder()
-                .body(item)
+                .body(findById(getIdPathParam(requestContext)))
                 .status(HttpResponseStatus.OK)
                 .build();
     }
@@ -51,10 +52,11 @@ public class ItemResource {
 
     public Response update(RequestContext requestContext) {
 
-        Observable<Item> updatedItem = itemDao.update(
-                Long.valueOf(requestContext.getPathParam("id")),
-                requestContext.deserializeBody(Item.class)
-        );
+        Observable<Item> updatedItem = findById(getIdPathParam(requestContext))
+                .flatMap(it -> itemDao.update(
+                        it.getId(),
+                        requestContext.deserializeBody(Item.class)
+                ));
 
         return Response.builder()
                 .body(updatedItem)
@@ -64,12 +66,28 @@ public class ItemResource {
 
     public Response delete(RequestContext requestContext) {
 
-        itemDao.delete(Long.valueOf(requestContext.getPathParam("id"))).subscribe();
+        findById(getIdPathParam(requestContext))
+                .flatMapCompletable(it -> itemDao.delete(it.getId()))
+                .subscribe();
 
         return Response.builder()
-                .body(Observable.empty())
+                .body("Item was deleted successfully")
                 .status(HttpResponseStatus.NO_CONTENT)
                 .build();
+    }
+
+    private Long getIdPathParam(RequestContext requestContext) {
+        return Long.valueOf(requestContext.getPathParam("id"));
+    }
+
+    private Observable<Item> findById(Long id) {
+        return itemDao.findById(id)
+                .flatMap(it -> {
+                    if (isNull(it)) {
+                        return Observable.error(new NotFoundException("Item not found"));
+                    }
+                    return Observable.just(it);
+                });
     }
 
 }
