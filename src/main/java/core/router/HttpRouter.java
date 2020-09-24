@@ -3,7 +3,6 @@ package core.router;
 import core.router.handler.ExceptionHandler;
 import core.router.handler.HttpRouteHandler;
 import core.router.request.RequestContext;
-import core.router.request.RequestContextImpl;
 import core.router.response.Response;
 import core.router.response.ResponseBody;
 import core.serde.Serializer;
@@ -73,7 +72,7 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
 
         try {
 
-            RequestContext requestContext = new RequestContextImpl(httpServerRequest, httpServerResponse);
+            RequestContext requestContext = new RequestContext(httpServerRequest, httpServerResponse);
 
             return routesMap
                     .getOrDefault(httpMapping, NOT_FOUND_MAPPING_HANDLER)

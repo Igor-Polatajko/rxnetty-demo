@@ -21,7 +21,7 @@ public class ItemResource {
 
     public Response findById(RequestContext requestContext) {
 
-        Observable<Item> item = itemDao.findById((Long) requestContext.getQueryParam("id", Long.class).get());
+        Observable<Item> item = itemDao.findById(Long.valueOf(requestContext.getQueryParam("id")));
 
         return Response.builder()
                 .body(item)
@@ -52,7 +52,7 @@ public class ItemResource {
     public Response update(RequestContext requestContext) {
 
         Observable<Item> updatedItem = itemDao.update(
-                (Long) requestContext.getQueryParam("id", Long.class).get(),
+                Long.valueOf("id"),
                 requestContext.deserializeBody(Item.class)
         );
 
@@ -64,7 +64,7 @@ public class ItemResource {
 
     public Response delete(RequestContext requestContext) {
 
-        itemDao.delete((Long) requestContext.getQueryParam("id", Long.class).get()).subscribe();
+        itemDao.delete(Long.valueOf("id")).subscribe();
 
         return Response.builder()
                 .body(Observable.empty())
