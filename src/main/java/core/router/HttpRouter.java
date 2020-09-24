@@ -3,6 +3,7 @@ package core.router;
 import core.router.handler.ExceptionHandler;
 import core.router.handler.HttpRouteHandler;
 import core.router.request.RequestContext;
+import core.router.response.HttpHandler;
 import core.router.response.Response;
 import core.router.response.ResponseBody;
 import core.serde.Serializer;
@@ -15,8 +16,12 @@ import io.reactivex.netty.protocol.http.server.RequestHandler;
 import lombok.extern.slf4j.Slf4j;
 import rx.Observable;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
@@ -35,16 +40,14 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
                     .status(HttpResponseStatus.INTERNAL_SERVER_ERROR)
                     .build();
 
-    private Map<HttpMapping, HttpRouteHandler> routesMap = new HashMap<>();
+    private Set<HttpHandler> httpHandlers = new HashSet<>();
 
     private Map<Class<? extends Throwable>, ExceptionHandler> errorResponses = new HashMap<>();
 
     @Override
     public Observable<Void> handle(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
 
-        HttpMapping httpMapping = new HttpMapping(request.getDecodedPath(), request.getHttpMethod());
-
-        Response handlingResult = handleRequest(request, response, httpMapping);
+        Response handlingResult = handleRequest(request, response);
 
         Observable<ResponseBody> responseBody = getResponseBody(handlingResult);
 
@@ -68,15 +71,23 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
     }
 
     private Response handleRequest(HttpServerRequest<ByteBuf> httpServerRequest,
-                                   HttpServerResponse<ByteBuf> httpServerResponse, HttpMapping httpMapping) {
+                                   HttpServerResponse<ByteBuf> httpServerResponse) {
 
         try {
 
-            RequestContext requestContext = new RequestContext(httpServerRequest, httpServerResponse);
+            Optional<HttpHandler> httpHandler = resolveHandler(httpServerRequest.getDecodedPath(),
+                    httpServerRequest.getHttpMethod());
 
-            return routesMap
-                    .getOrDefault(httpMapping, NOT_FOUND_MAPPING_HANDLER)
-                    .handle(requestContext);
+            return httpHandler
+                    .map(handler -> handler.getHttpRouteHandler().handle(
+                            new RequestContext(httpServerRequest,
+                                    httpServerResponse,
+                                    handler.getHttpMapping().resolvePathParams(httpServerRequest.getDecodedPath())
+                            )
+                    ))
+                    .orElse(NOT_FOUND_MAPPING_HANDLER.handle(
+                            new RequestContext(httpServerRequest, httpServerResponse, Collections.emptyMap())
+                    ));
         } catch (Throwable throwable) {
             log.error("Error occurred!", throwable);
 
@@ -110,7 +121,10 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
 
     public HttpRouter addRoute(String route, HttpMethod httpMethod, HttpRouteHandler handler) {
 
-        routesMap.put(new HttpMapping(route, httpMethod), handler);
+        httpHandlers.add(new HttpHandler(
+                new HttpMapping(route, httpMethod), handler)
+        );
+
         return this;
     }
 
@@ -119,4 +133,17 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
         errorResponses.put(throwable, exceptionHandler);
         return this;
     }
+
+    private Optional<HttpHandler> resolveHandler(String url, HttpMethod httpMethod) {
+
+        for (HttpHandler httpHandler : httpHandlers) {
+            HttpMapping httpMapping = httpHandler.getHttpMapping();
+            if (httpMapping.matches(url, httpMethod)) {
+                return Optional.of(httpHandler);
+            }
+        }
+
+        return Optional.empty();
+    }
+
 }
