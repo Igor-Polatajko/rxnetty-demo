@@ -9,6 +9,7 @@ import rx.Observable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Data
 public class RequestContext {
@@ -30,7 +31,9 @@ public class RequestContext {
     }
 
     public String getQueryParam(String name) {
-        return getQueryParamAsList(name).get(0);
+        return Optional.ofNullable(getQueryParamAsList(name))
+                .map(params -> params.get(0))
+                .orElse(null);
     }
 
     public List<String> getQueryParamAsList(String name) {

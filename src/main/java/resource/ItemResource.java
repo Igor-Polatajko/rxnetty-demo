@@ -71,7 +71,6 @@ public class ItemResource {
                 .subscribe();
 
         return Response.builder()
-                .body("Item was deleted successfully")
                 .status(HttpResponseStatus.NO_CONTENT)
                 .build();
     }

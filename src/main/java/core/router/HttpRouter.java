@@ -14,6 +14,7 @@ import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import io.reactivex.netty.protocol.http.server.RequestHandler;
 import lombok.extern.slf4j.Slf4j;
+import rx.Completable;
 import rx.Observable;
 
 import java.util.Collections;
@@ -40,6 +41,8 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
                     .status(HttpResponseStatus.INTERNAL_SERVER_ERROR)
                     .build();
 
+    private static final String EMPTY_BODY = "";
+
     private Set<HttpHandler> httpHandlers = new HashSet<>();
 
     private Map<Class<? extends Throwable>, ExceptionHandler> errorResponses = new HashMap<>();
@@ -52,6 +55,7 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
         Observable<ResponseBody> responseBody = getResponseBody(handlingResult);
 
         return responseBody.flatMap(body -> {
+
             if (body.isError()) {
 
                 log.error("Error occurred!", body.getError());
@@ -63,10 +67,11 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
                 setResponseStatusAndHeaders(response, errorResponse);
                 String errorResponseBody = getResponseBody(errorResponse).toBlocking().single().getContent();
                 return response.writeString(Observable.just(errorResponseBody));
-            } else {
-                setResponseStatusAndHeaders(response, handlingResult);
-                return response.writeString(Observable.just(body.getContent()));
             }
+
+            setResponseStatusAndHeaders(response, handlingResult);
+            return response.writeString(Observable.just(body.getContent()));
+
         });
     }
 
@@ -106,17 +111,23 @@ public class HttpRouter implements RequestHandler<ByteBuf, ByteBuf> {
     @SuppressWarnings("unchecked")
     private Observable<ResponseBody> getResponseBody(Response handlingResult) {
         Object resultBody = handlingResult.getBody();
+
+        if (resultBody instanceof Completable) {
+
+            Completable result = (Completable) resultBody;
+
+            return result
+                    .andThen(Observable.just(ResponseBody.success(EMPTY_BODY)))
+                    .onErrorReturn(ResponseBody::error);
+        }
+
         Observable body = resultBody instanceof Observable ? (Observable) resultBody : Observable.just(resultBody);
 
         Serializer serializer = handlingResult.getContentType().getSerializer();
         return serializer.serialize(body)
                 .single()
-                .map(content -> ResponseBody.builder()
-                        .content((String) content)
-                        .build())
-                .onErrorReturn(error -> ResponseBody.builder()
-                        .error((Throwable) error)
-                        .build());
+                .map(content -> ResponseBody.success((String) content))
+                .onErrorReturn(error -> ResponseBody.error((Throwable) error));
     }
 
     public HttpRouter addRoute(String route, HttpMethod httpMethod, HttpRouteHandler handler) {

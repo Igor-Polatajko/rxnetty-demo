@@ -2,6 +2,7 @@ package resource;
 
 import core.router.request.RequestContext;
 import core.router.response.Response;
+import rx.Completable;
 import rx.Observable;
 
 public class SimpleTextResource {
@@ -13,6 +14,13 @@ public class SimpleTextResource {
 
         return Response.builder()
                 .body(upperCaseString)
+                .build();
+    }
+
+    public Response testCompletableError(RequestContext requestContext) {
+
+        return Response.builder()
+                .body(Completable.error(new RuntimeException("Works fine!")))
                 .build();
     }
 

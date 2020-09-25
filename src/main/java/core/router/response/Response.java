@@ -4,7 +4,7 @@ import core.router.ContentType;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import lombok.Builder;
 import lombok.Data;
-import rx.Observable;
+import rx.Completable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ import java.util.Map;
 public class Response {
 
     @Builder.Default
-    private Object body = Observable.just("");
+    private Object body = Completable.complete();
 
     @Builder.Default
     private Map<String, String> headers = new HashMap<>();
